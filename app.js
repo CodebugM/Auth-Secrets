@@ -105,6 +105,7 @@ passport.use(new GoogleStrategy({
     // but instead retrieve it from their user info (simply another endpoint on Google)
   },
   function(accessToken, refreshToken, profile, cb) {
+    console.log(profile);
     User.findOrCreate({ googleId: profile.id }, function (err, user) {
       return cb(err, user);
     });
@@ -119,12 +120,20 @@ app.get("/", function(req, res) {
 });
 
 // route for the path the "sign in with Google" button will hit up
-app.get('/auth/google',
+app.get("/auth/google",
   //use passport to authenticate our user using the "google" strategy we set up above (ll. 97 ff.)
   // the code above helps Google recognise our app that we set up in the Google dashboard
   // And: When we git up Google, we tell them that what we want is the user's profile (incl. their email and their userId on Google)
   //   this ID we are going to identify them in the future
   passport.authenticate("google", { scope: ["profile"] }));
+
+  // this get request is made by Google when they redirect the user back to our website
+  app.get("/auth/google/secrets",
+    passport.authenticate("google", { failureRedirect: "/login" }),
+    function(req, res) {
+      // Successful authentication, redirect to secrets.
+      res.redirect("/secrets");
+    });
 
 // render the login route
 app.get("/login", function(req, res) {
