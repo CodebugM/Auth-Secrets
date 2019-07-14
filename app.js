@@ -19,9 +19,9 @@ const passportLocalMongoose = require("passport-local-mongoose");
 
 // new constant called GoogleStrategy and it uses the passport-google-oauth20 package we installed
 // and we are going to use it as a passport strategy
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
 // npm package allowing us to use User.findOrCreate() on line 108
-const findOrCreate = require('mongoose-findorcreate')
+const findOrCreate = require("mongoose-findorcreate");
 
 
 const app = express();
@@ -65,7 +65,8 @@ mongoose.set("useCreateIndex", true);
 // Step 1: Create a new schema so we can use mongoose-encryption
 const userSchema = new mongoose.Schema({
   email: String,
-  password: String
+  password: String,
+  googleId: String,
 });
 
 userSchema.plugin(passportLocalMongoose);
@@ -90,8 +91,16 @@ const User = new mongoose.model("User", userSchema);
 // passport local configurations
 passport.use(User.createStrategy());
 
-passport.serializeUser(User.serializeUser());
-passport.deserializeUser(User.deserializeUser());
+// passport code for serialising and deserialising; works with any type of authentication
+passport.serializeUser(function(user, done) {
+  done(null, user.id);
+});
+
+passport.deserializeUser(function(id, done) {
+  User.findById(id, function(err, user) {
+    done(err, user);
+  });
+});
 
 // code for passport package google-oauth20
 passport.use(new GoogleStrategy({
@@ -99,14 +108,17 @@ passport.use(new GoogleStrategy({
     clientSecret: process.env.CLIENT_SECRET,
     callbackURL: "http://localhost:3000/auth/google/secrets",
     // deals with the Google Plus API deprecation (as of Dec 2018)
-    userProfileURL: "https://googleapis.com/oauth2/v3/userinfo"
+    userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo"
     // Now, when we use passport to authenticate users using Google OAuth
     // we are no longer retrieving their profile information from their Google+ account
     // but instead retrieve it from their user info (simply another endpoint on Google)
   },
   function(accessToken, refreshToken, profile, cb) {
     console.log(profile);
-    User.findOrCreate({ googleId: profile.id }, function (err, user) {
+
+    User.findOrCreate({
+      googleId: profile.id
+    }, function(err, user) {
       return cb(err, user);
     });
   }
@@ -125,15 +137,19 @@ app.get("/auth/google",
   // the code above helps Google recognise our app that we set up in the Google dashboard
   // And: When we git up Google, we tell them that what we want is the user's profile (incl. their email and their userId on Google)
   //   this ID we are going to identify them in the future
-  passport.authenticate("google", { scope: ["profile"] }));
+  passport.authenticate("google", {
+    scope: ["profile"]
+  }));
 
-  // this get request is made by Google when they redirect the user back to our website
-  app.get("/auth/google/secrets",
-    passport.authenticate("google", { failureRedirect: "/login" }),
-    function(req, res) {
-      // Successful authentication, redirect to secrets.
-      res.redirect("/secrets");
-    });
+// this get request is made by Google when they redirect the user back to our website
+app.get("/auth/google/secrets",
+  passport.authenticate("google", {
+    failureRedirect: "/login"
+  }),
+  function(req, res) {
+    // Successful authentication, redirect to secrets.
+    res.redirect("/secrets");
+  });
 
 // render the login route
 app.get("/login", function(req, res) {
@@ -145,17 +161,17 @@ app.get("/register", function(req, res) {
   res.render("register");
 });
 
-app.get("/secrets", function(req, res){
+app.get("/secrets", function(req, res) {
   // if a user is already logged in, we want to simply render the secrets page
   // if not, we redirect them to the secrets page
-  if(req.isAuthenticated()){
+  if (req.isAuthenticated()) {
     res.render("secrets");
   } else {
     res.redirect("/login");
   }
 });
 
-app.get("/logout", function(req, res){
+app.get("/logout", function(req, res) {
   // de-authenticate the user and end the current session
   req.logout();
   res.redirect("/");
@@ -169,12 +185,14 @@ app.post("/register", function(req, res) {
 
   // tap into the User model and call the register method on it
   // this method comes from the passport-local-mongoose package
-  User.register({username: req.body.username}, req.body.password, function(err, user){
-    if(err) {
+  User.register({
+    username: req.body.username
+  }, req.body.password, function(err, user) {
+    if (err) {
       console.log(err);
       res.redirect("/register");
     } else {
-      passport.authenticate("local")(req, res, function(){
+      passport.authenticate("local")(req, res, function() {
         res.redirect("/secrets");
       });
     }
@@ -230,19 +248,19 @@ app.post("/login", function(req, res) {
   // use passport to log in the user and authenticate them
   // the login method comes from passport
   // we need to pass in the new user that the user provided on our login page
-  req.login(user, function(err){
-    if(err) {
+  req.login(user, function(err) {
+    if (err) {
       console.log(err);
     } else {
       // auhtenticate the user using their username and passwort
-      passport.authenticate("local")(req, res, function(){
+      passport.authenticate("local")(req, res, function() {
         res.redirect("/secrets");
       });
     }
   });
 
 
-// * * * OLD CODE USING BCRYPT * * * //
+  // * * * OLD CODE USING BCRYPT * * * //
 
   // // here we check whether we actually have a user in our database with the credentials they put in
   // // the credentials we are checking is the username and the password
