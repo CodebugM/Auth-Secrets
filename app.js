@@ -200,18 +200,28 @@ app.get("/register", function(req, res) {
 app.get("/secrets", function(req, res) {
 
   // trawl through the database and display all the secrets that have been added to our database
-  // User model - find all the places in the database where the field "secret" has a value
-  User.find({"secret": })
+  // User model - find all the places in the database where the field "secret" has a value / is not equal to null
+  // $ne - not equal to
+  User.find({"secret": {$ne: null}}, function(err, foundUsers){
+    if (err) {
+      console.log(err);
+    } else {
+      if (foundUsers) {
+        // if there were users found we are going to render the secrets page and pass over a variable
+        res.render("secrets", {})
+      }
+    }
+  })
 
 
   // *** OLD CODE: ONLY LOGGED IN USERS CAN VIEW THE SECRETS PAGE ***
   // if a user is already logged in, we want to simply render the secrets page
   // if not, we redirect them to the secrets page
-  if (req.isAuthenticated()) {
-    res.render("secrets");
-  } else {
-    res.redirect("/login");
-  }
+  // if (req.isAuthenticated()) {
+  //   res.render("secrets");
+  // } else {
+  //   res.redirect("/login");
+  // }
 
 });
 
