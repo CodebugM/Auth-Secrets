@@ -69,6 +69,7 @@ const userSchema = new mongoose.Schema({
   password: String,
   googleId: String,
   facebookId: String,
+  secret: String,
 });
 
 userSchema.plugin(passportLocalMongoose);
@@ -197,6 +198,13 @@ app.get("/register", function(req, res) {
 });
 
 app.get("/secrets", function(req, res) {
+
+  // trawl through the database and display all the secrets that have been added to our database
+  // User model - find all the places in the database where the field "secret" has a value
+  User.find({"secret": })
+
+
+  // *** OLD CODE: ONLY LOGGED IN USERS CAN VIEW THE SECRETS PAGE ***
   // if a user is already logged in, we want to simply render the secrets page
   // if not, we redirect them to the secrets page
   if (req.isAuthenticated()) {
@@ -204,6 +212,7 @@ app.get("/secrets", function(req, res) {
   } else {
     res.redirect("/login");
   }
+
 });
 
 // get route for submissions of secrets from users
@@ -222,7 +231,20 @@ app.post("/submit", function(req,res){
   const submittedSecret = req.body.secret;
 
   // find the current user in our database and save their secret into our file
-  console.log(req.user);
+  console.log(req.user.id);
+
+  User.findById(req.user.id, function(err, foundUser){
+    if (err) {
+      console.log(err);
+    } else {
+      if (foundUser) {
+        foundUser.secret = submittedSecret;
+        foundUser.save(function(){
+          res.redirect("/secrets");
+        });
+      }
+    }
+  });
 });
 
 
