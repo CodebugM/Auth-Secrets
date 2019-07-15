@@ -20,7 +20,8 @@ const passportLocalMongoose = require("passport-local-mongoose");
 // new constant called GoogleStrategy and it uses the passport-google-oauth20 package we installed
 // and we are going to use it as a passport strategy
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
-// npm package allowing us to use User.findOrCreate() on line 108
+const FacebookStrategy = require("passport-facebook").Strategy;
+// npm package allowing us to use User.findOrCreate() in the Google and Facebook strategies
 const findOrCreate = require("mongoose-findorcreate");
 
 
@@ -67,6 +68,7 @@ const userSchema = new mongoose.Schema({
   email: String,
   password: String,
   googleId: String,
+  facebookId: String,
 });
 
 userSchema.plugin(passportLocalMongoose);
