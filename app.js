@@ -102,6 +102,7 @@ passport.deserializeUser(function(id, done) {
   });
 });
 
+// * GOOGLE *
 // code for passport package google-oauth20
 passport.use(new GoogleStrategy({
     clientID: process.env.CLIENT_ID,
@@ -124,19 +125,24 @@ passport.use(new GoogleStrategy({
   }
 ));
 
+// * FACEBOOK *
 // code for the passport facebook authentication package
+// configures the strategy
+// http://www.passportjs.org/packages/passport-facebook/
 passport.use(new FacebookStrategy({
     clientID: process.env.FACEBOOK_APP_ID,
     clientSecret: process.env.FACEBOOK_APP_SECRET,
     callbackURL: "http://localhost:3000/auth/facebook/secrets"
   },
   function(accessToken, refreshToken, profile, cb) {
-    User.findOrCreate({ facebookId: profile.id }, function (err, user) {
+    console.log(profile);
+    User.findOrCreate({
+      facebookId: profile.id
+    }, function(err, user) {
       return cb(err, user);
     });
   }
 ));
-
 
 
 // render the homepage
@@ -163,6 +169,22 @@ app.get("/auth/google/secrets",
     // Successful authentication, redirect to secrets.
     res.redirect("/secrets");
   });
+
+// Authenticating requests using Facebook:
+
+// route for the path the "Sign In with Facebook" button will hit up
+app.get("/auth/facebook",
+  passport.authenticate("facebook"));
+
+// get request made by Facebook when they redirect the user back to our website
+app.get("/auth/facebook/secrets",
+  passport.authenticate("facebook", { failureRedirect: "/login" }),
+  function(req, res) {
+    // Successful authentication, redirect home.
+    res.redirect("/secrets");
+  });
+
+
 
 // render the login route
 app.get("/login", function(req, res) {
