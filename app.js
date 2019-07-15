@@ -186,8 +186,6 @@ app.get("/auth/facebook/secrets",
     res.redirect("/secrets");
   });
 
-
-
 // render the login route
 app.get("/login", function(req, res) {
   res.render("login");
@@ -217,7 +215,16 @@ app.get("/submit", function(req, res){
   } else {
     res.redirect("/login");
   }
-})
+});
+
+app.post("/submit", function(req,res){
+  // save the secret the user typed in
+  const submittedSecret = req.body.secret;
+
+  // find the current user in our database and save their secret into our file
+  console.log(req.user);
+});
+
 
 app.get("/logout", function(req, res) {
   // de-authenticate the user and end the current session
