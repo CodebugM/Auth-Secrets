@@ -208,6 +208,17 @@ app.get("/secrets", function(req, res) {
   }
 });
 
+// get route for submissions of secrets from users
+app.get("/submit", function(req, res){
+  // if the user is logged in, i.e. req.isAuthenticated is true, they should be taken to submit.ejs
+  // i.e. then we render the submit.ejs page so the user can submit a secret
+  if (req.isAuthenticated()) {
+    res.render("submit");
+  } else {
+    res.redirect("/login");
+  }
+})
+
 app.get("/logout", function(req, res) {
   // de-authenticate the user and end the current session
   req.logout();
