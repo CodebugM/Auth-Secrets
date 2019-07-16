@@ -202,16 +202,20 @@ app.get("/secrets", function(req, res) {
   // trawl through the database and display all the secrets that have been added to our database
   // User model - find all the places in the database where the field "secret" has a value / is not equal to null
   // $ne - not equal to
+  // looks through all the users in our user database and looks through the secret fields to check where the
+  //   secret field is not equal to null
   User.find({"secret": {$ne: null}}, function(err, foundUsers){
     if (err) {
       console.log(err);
     } else {
+      // if we indeed found some users, i.e. foundUsers is not equal to nill we render the secrets page
       if (foundUsers) {
-        // if there were users found we are going to render the secrets page and pass over a variable
-        res.render("secrets", {})
+        // and we are going to pass in a variable, usersWithSecrets, because that's essentially what we're looking for
+        // and we are going to pass in the foundUsers as a value for that variable
+        res.render("secrets", {usersWithSecrets: foundUsers});
       }
     }
-  })
+  });
 
 
   // *** OLD CODE: ONLY LOGGED IN USERS CAN VIEW THE SECRETS PAGE ***
